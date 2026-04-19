@@ -104,7 +104,7 @@ def main() -> None:
         n_repeats=8,
         random_state=42,
         scoring="balanced_accuracy",
-        n_jobs=-1,
+        n_jobs=1,
     )
     pfi = pd.DataFrame(
         {
