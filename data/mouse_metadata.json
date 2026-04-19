@@ -1,0 +1,7 @@
+{
+  "30": {
+    "genotype": "Scn1a+/-",
+    "strain": "C57BL/6J",
+    "notes": "Edit this file with the real genotype for mouse 30 (copied from mouse_metadata.example.json)."
+  }
+}

@@ -1,0 +1,8 @@
+gene_symbol,seizure_phenotype_mouse,notes,example_reference
+Scn1a,"Convulsive (febrile-like, myoclonic), atypical absence / spike-wave in some models","Loss of Nav1.1 in interneurons drives hyperexcitability; mouse models show mixed phenotypes",PMID:18550729
+Gabra1,"Typical absence / spike-and-wave (GAERS-like in some knockdowns)","GABA-A alpha1 subunit deficits linked to absence circuits",PMID:10493787
+Chrna4,"Nicotine-related seizures, some convulsive susceptibility","Neuronal nicotinic receptor mutations alter seizure threshold",PMID:11852039
+Cacna1h,"Absence epilepsy susceptibility (T-type calcium)","Thalamocortical oscillations in absence models",PMID:15115727
+Pcdh19,"Clustered convulsive seizures (female-limited in humans; rodent analogs vary)","Cortical interneuron dysfunction",PMID:18950748
+Kcna1,"Myoclonic / convulsive (low threshold firing changes)","Voltage-gated K+ channel, motor cortex hyperexcitability",PMID:22302818
+Mecp2,"Mixed epileptic phenotypes in Rett models (convulsive common)","Broad network dysfunction",PMID:17021106

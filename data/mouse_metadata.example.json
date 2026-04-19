@@ -1,0 +1,7 @@
+{
+  "30": {
+    "genotype": "Scn1a+/-",
+    "strain": "C57BL/6J",
+    "notes": "Replace with your real genotype for mouse 30; used only for gene→phenotype lookup."
+  }
+}
