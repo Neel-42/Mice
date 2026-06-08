@@ -10,9 +10,11 @@ from pathlib import Path
 import numpy as np
 
 from .seizure_viewer_data import (
+    DISPLAY_HZ,
     FEATURED_SEGMENTS,
     PROJECT_ROOT,
     RECORDINGS,
+    block_average_downsample,
     get_predicted_spans,
     get_recording,
     get_true_spans,
@@ -23,17 +25,19 @@ DOCS_DIR = PROJECT_ROOT / "docs"
 WEB_DIR = PROJECT_ROOT / "web"
 
 
-def export_trace_json(rec_id: str, target_hz: float = 1.0) -> dict:
+def export_trace_binary(rec_id: str, target_hz: float = DISPLAY_HZ) -> tuple[dict, np.ndarray]:
     rec = get_recording(rec_id)
-    step = max(1, int(round(rec.fs_hz / target_hz)))
-    ecog = rec.ecog[::step]
-    t = (np.arange(ecog.shape[0]) * step / rec.fs_hz).astype(float)
-    return {
-        "fs_hz": float(rec.fs_hz),
-        "display_hz": float(rec.fs_hz / step),
-        "t": t.tolist(),
-        "ecog": ecog.astype(float).tolist(),
+    ecog_ds, display_hz, block = block_average_downsample(
+        rec.ecog, rec.fs_hz, target_hz
+    )
+    meta = {
+        "source_fs_hz": float(rec.fs_hz),
+        "display_hz": display_hz,
+        "block_size": block,
+        "n_samples": int(ecog_ds.shape[0]),
+        "duration_s": float(ecog_ds.shape[0] / display_hz),
     }
+    return meta, ecog_ds
 
 
 def export_events_json(rec_id: str) -> dict:
@@ -292,10 +296,14 @@ def export_site(out_dir: Path, pages_base: str = "/Mice/") -> None:
         (data_dir / f"{rec_id}_events.json").write_text(
             json.dumps(events, indent=2), encoding="utf-8"
         )
-        trace = export_trace_json(rec_id, target_hz=1.0)
-        (data_dir / f"{rec_id}_trace.json").write_text(
-            json.dumps(trace), encoding="utf-8"
+        meta, ecog_ds = export_trace_binary(rec_id, target_hz=DISPLAY_HZ)
+        (data_dir / f"{rec_id}_trace_meta.json").write_text(
+            json.dumps(meta, indent=2), encoding="utf-8"
         )
+        (data_dir / f"{rec_id}_trace.bin").write_bytes(ecog_ds.tobytes())
+        old_json = data_dir / f"{rec_id}_trace.json"
+        if old_json.exists():
+            old_json.unlink()
 
     shutil.copy2(WEB_DIR / "styles.css", out_dir / "styles.css")
     for i in range(1, 6):
@@ -303,15 +311,21 @@ def export_site(out_dir: Path, pages_base: str = "/Mice/") -> None:
         if src.exists():
             shutil.copy2(src, static_dir / f"zoom_{i}.png")
 
-    index = (WEB_DIR / "index.html").read_text(encoding="utf-8")
-    index = index.replace(
-        "<head>",
-        f'<head>\n    <meta name="pages-base" content="{pages_base}" />',
-    )
-    index = index.replace('href="styles.css"', f'href="{pages_base}styles.css"')
-    index = index.replace('src="app.js"', f'src="{pages_base}app.js"')
-    (out_dir / "index.html").write_text(index, encoding="utf-8")
-    write_static_app_js(out_dir / "app.js")
+    if not (out_dir / "index.html").exists():
+        index = (WEB_DIR / "index.html").read_text(encoding="utf-8")
+        index = index.replace(
+            "<head>",
+            f'<head>\n    <meta name="pages-base" content="{pages_base}" />',
+        )
+        index = index.replace('href="styles.css"', f'href="{pages_base}styles.css"')
+        index = index.replace('src="app.js"', f'src="{pages_base}app.js"')
+        (out_dir / "index.html").write_text(index, encoding="utf-8")
+    src_app = (PROJECT_ROOT / "docs" / "app.js").resolve()
+    dst_app = (out_dir / "app.js").resolve()
+    if src_app.exists() and src_app != dst_app:
+        shutil.copy2(src_app, dst_app)
+    elif not dst_app.exists():
+        write_static_app_js(dst_app)
     (out_dir / ".nojekyll").write_text("", encoding="utf-8")
     print("Wrote", out_dir.resolve())
 

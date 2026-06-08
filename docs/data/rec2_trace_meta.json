@@ -1,0 +1,7 @@
+{
+  "source_fs_hz": 200.0,
+  "display_hz": 100.0,
+  "block_size": 2,
+  "n_samples": 8465030,
+  "duration_s": 84650.3
+}

@@ -6,7 +6,7 @@ const state = {
   recId: null,
   durationS: 86400,
   events: { true_spans: [], pred_spans: [], featured: [] },
-  trace: { t: [], ecog: [] },
+  trace: { display_hz: 100, block_size: 2, ecog: new Float32Array(0) },
   seizureIndex: 0,
 };
 
@@ -54,20 +54,30 @@ function spansInWindow(spans, t0, t1) {
     }));
 }
 
-function sliceTrace(t0, t1, maxPoints = 12000) {
-  const t = state.trace.t;
+function sliceTrace(t0, t1) {
+  const hz = state.trace.display_hz;
   const y = state.trace.ecog;
-  let i0 = 0;
-  while (i0 < t.length && t[i0] < t0) i0 += 1;
-  let i1 = i0;
-  while (i1 < t.length && t[i1] <= t1) i1 += 1;
-  const segT = t.slice(i0, i1);
-  const segY = y.slice(i0, i1);
-  if (segT.length <= maxPoints) return { t: segT, ecog: segY };
-  const step = Math.ceil(segT.length / maxPoints);
+  const i0 = Math.max(0, Math.floor(t0 * hz));
+  const i1 = Math.min(y.length, Math.ceil(t1 * hz));
+  const n = Math.max(0, i1 - i0);
+  const t = new Array(n);
+  const ecog = new Array(n);
+  for (let i = 0; i < n; i += 1) {
+    t[i] = (i0 + i) / hz;
+    ecog[i] = y[i0 + i];
+  }
+  return { t, ecog };
+}
+
+async function loadTrace(recId) {
+  const meta = await fetchJson(`data/${recId}_trace_meta.json`);
+  const res = await fetch(asset(`data/${recId}_trace.bin`));
+  if (!res.ok) throw new Error(`Missing trace data for ${recId}`);
+  const buf = await res.arrayBuffer();
   return {
-    t: segT.filter((_, i) => i % step === 0),
-    ecog: segY.filter((_, i) => i % step === 0),
+    display_hz: meta.display_hz,
+    block_size: meta.block_size,
+    ecog: new Float32Array(buf),
   };
 }
 
@@ -121,7 +131,9 @@ function renderPlot() {
     line: { color: '#4da3ff', width: 1 },
   }], layout, { responsive: true, displayModeBar: true, scrollZoom: true });
 
-  els.status.textContent = `Showing ${trace.t.length.toLocaleString()} points | green=true, red=predicted`;
+  els.status.textContent =
+    `Showing ${trace.t.length.toLocaleString()} points @ ${state.trace.display_hz} Hz ` +
+    `(avg every ${state.trace.block_size} raw samples) | green=true, red=predicted`;
 }
 
 function renderFeatured() {
@@ -186,7 +198,8 @@ async function loadRecording(recId) {
   els.startSlider.max = Math.max(0, Math.floor(meta.duration_s - 10));
   els.startLabel.textContent = els.startSlider.value;
   state.events = await fetchJson(`data/${recId}_events.json`);
-  state.trace = await fetchJson(`data/${recId}_trace.json`);
+  els.status.textContent = 'Loading ECoG trace (100 Hz block averages)…';
+  state.trace = await loadTrace(recId);
   renderFeatured();
   renderPlot();
 }

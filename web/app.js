@@ -121,7 +121,9 @@ async function renderPlot() {
     scrollZoom: true,
   });
 
-  els.status.textContent = `Showing ${data.trace.t.length.toLocaleString()} points | green=true, red=predicted`;
+  const hz = data.trace.display_hz ? `@ ${data.trace.display_hz} Hz ` : '';
+  els.status.textContent =
+    `Showing ${data.trace.t.length.toLocaleString()} points ${hz}| green=true, red=predicted`;
 }
 
 function renderFeatured() {
