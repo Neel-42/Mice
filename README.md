@@ -73,13 +73,14 @@ Binary outputs include `swdlabel_max_in_window` for reference.
 
 ## Interactive seizure viewer (GitHub Pages)
 
-After pushing to `main`, GitHub Actions publishes `docs/` to the `gh-pages` branch.
+Live URL (after Pages is enabled): **https://neel-42.github.io/Mice/**
 
-1. Open **Settings → Pages** on the repo.
-2. Set **Source** to **Deploy from a branch**.
-3. Choose branch **`gh-pages`**, folder **`/ (root)`**, then Save.
+If you see a 404, enable Pages once:
 
-Live URL: **https://neel-42.github.io/Mice/**
+1. Open https://github.com/Neel-42/Mice/settings/pages
+2. **Build and deployment → Source:** choose **Deploy from a branch**
+3. Branch: **`main`**, Folder: **`/docs`**, click **Save**
+4. Wait 1–3 minutes, then refresh the live URL
 
 To rebuild static site data locally after model/output changes:
 

@@ -1,10 +1,6 @@
-const ROOT = (() => {
-  const m = document.querySelector('meta[name="pages-base"]');
-  if (m && m.content) return m.content;
-  const parts = window.location.pathname.split('/').filter(Boolean);
-  if (parts.length && parts[0].toLowerCase() === 'mice') return '/Mice/';
-  return './';
-})();
+function asset(path) {
+  return new URL(path, window.location.href).href;
+}
 
 const state = {
   recId: null,
@@ -30,7 +26,7 @@ const els = {
 };
 
 async function fetchJson(path) {
-  const url = `${ROOT}${path}`.replace(/\\/g, '/');
+  const url = asset(path);
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Request failed: ${url}`);
   return res.json();
@@ -150,7 +146,7 @@ function renderFeatured() {
   for (const seg of state.events.featured) {
     const fig = document.createElement('figure');
     const img = document.createElement('img');
-    img.src = `${ROOT}static/zoom_${seg.id}.png`;
+    img.src = asset(`static/zoom_${seg.id}.png`);
     img.alt = seg.label;
     img.addEventListener('click', () => {
       els.startSlider.value = Math.max(0, Math.floor(seg.start_s));
