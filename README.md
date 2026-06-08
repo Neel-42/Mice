@@ -71,6 +71,24 @@ python3 -m src.predict --mat "m30_Rec1_ALL (1).mat" --model models/seizure_rf.jo
 
 Binary outputs include `swdlabel_max_in_window` for reference.
 
+## Interactive seizure viewer (GitHub Pages)
+
+After pushing to `main`, the seizure ECoG viewer is published at:
+
+**https://neel-42.github.io/Mice/**
+
+To rebuild static site data locally after model/output changes:
+
+```bash
+python3 -m src.export_pages_data --out docs --pages-base /Mice/
+```
+
+Local Flask viewer (full-resolution API):
+
+```bash
+python3 -m src.seizure_viewer_server
+```
+
 ## Outputs
 
 - `models/seizure_rf.joblib` — trained model bundle (also writes `.meta.json`).
