@@ -73,9 +73,12 @@ Binary outputs include `swdlabel_max_in_window` for reference.
 
 ## Interactive seizure viewer (GitHub Pages)
 
-Live URL (after Pages is enabled): **https://neel-42.github.io/Mice/**
+**Works now (no Pages setup needed):**  
+https://cdn.jsdelivr.net/gh/Neel-42/Mice@main/docs/index.html
 
-If you see a 404, enable Pages once:
+GitHub Pages URL (after enabled): **https://neel-42.github.io/Mice/**
+
+If GitHub Pages shows 404, enable it once:
 
 1. Open https://github.com/Neel-42/Mice/settings/pages
 2. **Build and deployment → Source:** choose **Deploy from a branch**
