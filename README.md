@@ -73,9 +73,13 @@ Binary outputs include `swdlabel_max_in_window` for reference.
 
 ## Interactive seizure viewer (GitHub Pages)
 
-After pushing to `main`, the seizure ECoG viewer is published at:
+After pushing to `main`, GitHub Actions publishes `docs/` to the `gh-pages` branch.
 
-**https://neel-42.github.io/Mice/**
+1. Open **Settings → Pages** on the repo.
+2. Set **Source** to **Deploy from a branch**.
+3. Choose branch **`gh-pages`**, folder **`/ (root)`**, then Save.
+
+Live URL: **https://neel-42.github.io/Mice/**
 
 To rebuild static site data locally after model/output changes:
 

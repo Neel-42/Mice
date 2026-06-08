@@ -312,6 +312,7 @@ def export_site(out_dir: Path, pages_base: str = "/Mice/") -> None:
     index = index.replace('src="app.js"', f'src="{pages_base}app.js"')
     (out_dir / "index.html").write_text(index, encoding="utf-8")
     write_static_app_js(out_dir / "app.js")
+    (out_dir / ".nojekyll").write_text("", encoding="utf-8")
     print("Wrote", out_dir.resolve())
 
 
