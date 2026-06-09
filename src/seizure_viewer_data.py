@@ -14,6 +14,23 @@ from .load_data import Recording, load_recording
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
+# Website display rate: block-average raw ECoG to this many points per second.
+DISPLAY_HZ = 100.0
+
+
+def block_average_downsample(
+    signal: np.ndarray, fs: float, target_hz: float = DISPLAY_HZ
+) -> tuple[np.ndarray, float, int]:
+    """Average consecutive samples in blocks (e.g. 200 Hz -> 100 Hz uses block size 2)."""
+    block = max(1, int(round(fs / target_hz)))
+    n = (int(signal.shape[0]) // block) * block
+    if n == 0:
+        return np.array([], dtype=np.float32), target_hz, block
+    reshaped = signal[:n].astype(np.float64).reshape(-1, block)
+    averaged = reshaped.mean(axis=1).astype(np.float32)
+    actual_hz = float(fs / block)
+    return averaged, actual_hz, block
+
 RECORDINGS: dict[str, dict[str, str]] = {
     "rec1": {
         "label": "Mouse 30 — Recording 1",
@@ -27,15 +44,9 @@ RECORDINGS: dict[str, dict[str, str]] = {
     },
 }
 
-# Featured predicted-seizure zoom segments (seconds) from earlier analysis.
+# Legacy fallback if postprocessed predictions are missing.
 FEATURED_SEGMENTS: dict[str, list[dict[str, float | str]]] = {
-    "rec1": [
-        {"id": 1, "start_s": 11025.0, "end_s": 11071.0, "label": "Predicted seizure #1"},
-        {"id": 2, "start_s": 11451.0, "end_s": 11497.0, "label": "Predicted seizure #2"},
-        {"id": 3, "start_s": 11781.0, "end_s": 11827.0, "label": "Predicted seizure #3"},
-        {"id": 4, "start_s": 11823.0, "end_s": 11871.0, "label": "Predicted seizure #4"},
-        {"id": 5, "start_s": 12211.0, "end_s": 12256.0, "label": "Predicted seizure #5"},
-    ],
+    "rec1": [],
 }
 
 
@@ -114,21 +125,27 @@ def get_predicted_spans(rec_id: str, win_s: float = 2.0) -> list[dict[str, float
 
 def downsample_trace(
     ecog: np.ndarray, fs: float, t0: float, t1: float, max_points: int = 12000
-) -> dict[str, list[float]]:
+) -> dict[str, list[float] | float]:
     t0 = max(0.0, t0)
     t1 = min(len(ecog) / fs, t1)
     if t1 <= t0:
-        return {"t": [], "ecog": []}
+        return {"t": [], "ecog": [], "display_hz": DISPLAY_HZ}
     s0 = int(t0 * fs)
     s1 = int(t1 * fs)
     seg = ecog[s0:s1]
-    n = seg.shape[0]
-    if n == 0:
-        return {"t": [], "ecog": []}
-    step = max(1, int(np.ceil(n / max_points)))
-    idx = np.arange(0, n, step)
-    t = (s0 + idx) / fs
-    return {"t": t.astype(float).tolist(), "ecog": seg[idx].astype(float).tolist()}
+    if seg.shape[0] == 0:
+        return {"t": [], "ecog": [], "display_hz": DISPLAY_HZ}
+    averaged, display_hz, _ = block_average_downsample(seg, fs, DISPLAY_HZ)
+    t = (s0 / fs) + (np.arange(averaged.shape[0]) / display_hz)
+    if averaged.shape[0] > max_points:
+        step = int(np.ceil(averaged.shape[0] / max_points))
+        averaged = averaged[::step]
+        t = t[::step]
+    return {
+        "t": t.astype(float).tolist(),
+        "ecog": averaged.astype(float).tolist(),
+        "display_hz": display_hz,
+    }
 
 
 def spans_in_window(spans: list[dict[str, float]], t0: float, t1: float) -> list[dict[str, float]]:
@@ -143,6 +160,26 @@ def spans_in_window(spans: list[dict[str, float]], t0: float, t1: float) -> list
             }
         )
     return out
+
+
+def get_featured_segments(
+    rec_id: str, limit: int = 5, pad_s: float = 20.0
+) -> list[dict[str, float | str | int]]:
+    """Build featured zoom windows from current postprocessed predicted spans."""
+    spans = get_predicted_spans(rec_id)
+    featured: list[dict[str, float | str | int]] = []
+    for i, sp in enumerate(spans[:limit], start=1):
+        s = float(sp["start_s"]) - pad_s
+        e = float(sp["end_s"]) + pad_s
+        featured.append(
+            {
+                "id": i,
+                "start_s": max(0.0, s),
+                "end_s": e,
+                "label": f"Predicted seizure #{i}",
+            }
+        )
+    return featured
 
 
 def recording_meta(rec_id: str) -> dict[str, Any]:

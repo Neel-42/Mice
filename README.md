@@ -71,6 +71,32 @@ python3 -m src.predict --mat "m30_Rec1_ALL (1).mat" --model models/seizure_rf.jo
 
 Binary outputs include `swdlabel_max_in_window` for reference.
 
+## Interactive seizure viewer (GitHub Pages)
+
+**Works now (no Pages setup needed):**  
+https://cdn.jsdelivr.net/gh/Neel-42/Mice@main/docs/index.html
+
+GitHub Pages URL (after enabled): **https://neel-42.github.io/Mice/**
+
+If GitHub Pages shows 404, enable it once:
+
+1. Open https://github.com/Neel-42/Mice/settings/pages
+2. **Build and deployment → Source:** choose **Deploy from a branch**
+3. Branch: **`main`**, Folder: **`/docs`**, click **Save**
+4. Wait 1–3 minutes, then refresh the live URL
+
+To rebuild static site data locally after model/output changes:
+
+```bash
+python3 -m src.export_pages_data --out docs --pages-base /Mice/
+```
+
+Local Flask viewer (full-resolution API):
+
+```bash
+python3 -m src.seizure_viewer_server
+```
+
 ## Outputs
 
 - `models/seizure_rf.joblib` — trained model bundle (also writes `.meta.json`).

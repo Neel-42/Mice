@@ -1,0 +1,22 @@
+[
+  {
+    "id": "rec1",
+    "label": "Mouse 30 \u2014 Recording 1",
+    "mouse_id": 30,
+    "fs_hz": 200.0,
+    "duration_s": 89659.5,
+    "duration_h": 24.905416666666667,
+    "n_true_spans": 117,
+    "n_pred_spans": 114
+  },
+  {
+    "id": "rec2",
+    "label": "Mouse 30 \u2014 Recording 2",
+    "mouse_id": 30,
+    "fs_hz": 200.0,
+    "duration_s": 84650.3,
+    "duration_h": 23.513972222222222,
+    "n_true_spans": 91,
+    "n_pred_spans": 49
+  }
+]

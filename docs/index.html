@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mouse ECoG Seizure Viewer</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  </head>
+  <body>
+    <header>
+      <h1>Mouse ECoG Seizure Viewer</h1>
+      <p>
+        Interactive ECoG traces with true spike-wave labels and postprocessed
+        seizure predictions. Display: 100 averaged points per second.
+      </p>
+    </header>
+
+    <main class="layout">
+      <aside class="panel">
+        <label>
+          Recording
+          <select id="recordingSelect"></select>
+        </label>
+
+        <label>
+          Window start (s)
+          <input id="startSlider" type="range" min="0" max="1000" value="0" step="1" />
+          <span id="startLabel">0</span>
+        </label>
+
+        <label>
+          Window length (s)
+          <input id="durationSlider" type="range" min="10" max="600" value="120" step="5" />
+          <span id="durationLabel">120</span>
+        </label>
+
+        <div class="toggles">
+          <label><input id="showTrue" type="checkbox" checked /> True seizures</label>
+          <label><input id="showPred" type="checkbox" checked /> Predicted seizures</label>
+        </div>
+
+        <div class="buttons">
+          <button id="prevBtn" type="button">◀ Prev seizure</button>
+          <button id="nextBtn" type="button">Next seizure ▶</button>
+        </div>
+
+        <section>
+          <h2>Featured segments</h2>
+          <ul id="featuredList" class="featured-list"></ul>
+        </section>
+
+        <section>
+          <h2>Zoom snapshots</h2>
+          <div id="zoomGallery" class="zoom-gallery"></div>
+        </section>
+      </aside>
+
+      <section class="chart-area">
+        <div id="ecogPlot"></div>
+        <p id="status" class="status">Loading…</p>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
