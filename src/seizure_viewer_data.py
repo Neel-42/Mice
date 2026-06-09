@@ -44,15 +44,9 @@ RECORDINGS: dict[str, dict[str, str]] = {
     },
 }
 
-# Featured predicted-seizure zoom segments (seconds) from earlier analysis.
+# Legacy fallback if postprocessed predictions are missing.
 FEATURED_SEGMENTS: dict[str, list[dict[str, float | str]]] = {
-    "rec1": [
-        {"id": 1, "start_s": 11025.0, "end_s": 11071.0, "label": "Predicted seizure #1"},
-        {"id": 2, "start_s": 11451.0, "end_s": 11497.0, "label": "Predicted seizure #2"},
-        {"id": 3, "start_s": 11781.0, "end_s": 11827.0, "label": "Predicted seizure #3"},
-        {"id": 4, "start_s": 11823.0, "end_s": 11871.0, "label": "Predicted seizure #4"},
-        {"id": 5, "start_s": 12211.0, "end_s": 12256.0, "label": "Predicted seizure #5"},
-    ],
+    "rec1": [],
 }
 
 
@@ -166,6 +160,26 @@ def spans_in_window(spans: list[dict[str, float]], t0: float, t1: float) -> list
             }
         )
     return out
+
+
+def get_featured_segments(
+    rec_id: str, limit: int = 5, pad_s: float = 20.0
+) -> list[dict[str, float | str | int]]:
+    """Build featured zoom windows from current postprocessed predicted spans."""
+    spans = get_predicted_spans(rec_id)
+    featured: list[dict[str, float | str | int]] = []
+    for i, sp in enumerate(spans[:limit], start=1):
+        s = float(sp["start_s"]) - pad_s
+        e = float(sp["end_s"]) + pad_s
+        featured.append(
+            {
+                "id": i,
+                "start_s": max(0.0, s),
+                "end_s": e,
+                "label": f"Predicted seizure #{i}",
+            }
+        )
+    return featured
 
 
 def recording_meta(rec_id: str) -> dict[str, Any]:

@@ -7,14 +7,18 @@ import json
 import shutil
 from pathlib import Path
 
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 import numpy as np
 
 from .seizure_viewer_data import (
     DISPLAY_HZ,
-    FEATURED_SEGMENTS,
     PROJECT_ROOT,
     RECORDINGS,
     block_average_downsample,
+    get_featured_segments,
     get_predicted_spans,
     get_recording,
     get_true_spans,
@@ -41,11 +45,60 @@ def export_trace_binary(rec_id: str, target_hz: float = DISPLAY_HZ) -> tuple[dic
 
 
 def export_events_json(rec_id: str) -> dict:
+    featured = get_featured_segments(rec_id)
     return {
         "true_spans": get_true_spans(rec_id),
         "pred_spans": get_predicted_spans(rec_id),
-        "featured": FEATURED_SEGMENTS.get(rec_id, []),
+        "featured": featured,
     }
+
+
+def export_zoom_pngs(rec_id: str, static_dir: Path, limit: int = 5) -> None:
+    """Render zoom snapshot PNGs from updated postprocessed predictions."""
+    rec = get_recording(rec_id)
+    featured = get_featured_segments(rec_id, limit=limit)
+    true_spans = get_true_spans(rec_id)
+    pred_spans = get_predicted_spans(rec_id)
+
+    for seg in featured:
+        t0 = float(seg["start_s"])
+        t1 = float(seg["end_s"])
+        s0 = int(max(0, t0 * rec.fs_hz))
+        s1 = int(min(len(rec.ecog), t1 * rec.fs_hz))
+        raw = rec.ecog[s0:s1]
+        if raw.size == 0:
+            continue
+        ecog, hz, _ = block_average_downsample(raw, rec.fs_hz, DISPLAY_HZ)
+        t = (s0 / rec.fs_hz) + (np.arange(ecog.shape[0]) / hz)
+
+        plt.figure(figsize=(12, 4))
+        plt.plot(t, ecog, color="navy", linewidth=0.7)
+        for sp in true_spans:
+            if sp["end_s"] < t0 or sp["start_s"] > t1:
+                continue
+            plt.axvspan(
+                max(t0, sp["start_s"]),
+                min(t1, sp["end_s"]),
+                color="green",
+                alpha=0.18,
+            )
+        for sp in pred_spans:
+            if sp["end_s"] < t0 or sp["start_s"] > t1:
+                continue
+            plt.axvspan(
+                max(t0, sp["start_s"]),
+                min(t1, sp["end_s"]),
+                color="red",
+                alpha=0.15,
+            )
+        plt.xlabel("Time (s)")
+        plt.ylabel("ECoG level")
+        plt.title(f"{seg['label']} ({rec_id}, 100 Hz block average)")
+        plt.tight_layout()
+        out = static_dir / f"zoom_{seg['id']}.png"
+        plt.savefig(out, dpi=160)
+        plt.close()
+        print(f"  wrote {out.name}")
 
 
 def write_static_app_js(dest: Path) -> None:
@@ -306,10 +359,14 @@ def export_site(out_dir: Path, pages_base: str = "/Mice/") -> None:
             old_json.unlink()
 
     shutil.copy2(WEB_DIR / "styles.css", out_dir / "styles.css")
+    # Zoom PNGs from updated postprocessed dataset (rec1 featured gallery).
+    export_zoom_pngs("rec1", static_dir, limit=5)
     for i in range(1, 6):
-        src = WEB_DIR / "static" / f"zoom_{i}.png"
+        src = static_dir / f"zoom_{i}.png"
+        dst_web = WEB_DIR / "static" / f"zoom_{i}.png"
         if src.exists():
-            shutil.copy2(src, static_dir / f"zoom_{i}.png")
+            dst_web.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dst_web)
 
     if not (out_dir / "index.html").exists():
         index = (WEB_DIR / "index.html").read_text(encoding="utf-8")

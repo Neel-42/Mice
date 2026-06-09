@@ -9,10 +9,10 @@ from pathlib import Path
 from flask import Flask, jsonify, request, send_from_directory
 
 from .seizure_viewer_data import (
-    FEATURED_SEGMENTS,
     PROJECT_ROOT,
     RECORDINGS,
     downsample_trace,
+    get_featured_segments,
     get_predicted_spans,
     get_recording,
     get_true_spans,
@@ -54,7 +54,7 @@ def create_app() -> Flask:
             {
                 "true_spans": get_true_spans(rec_id),
                 "pred_spans": get_predicted_spans(rec_id),
-                "featured": FEATURED_SEGMENTS.get(rec_id, []),
+                "featured": get_featured_segments(rec_id),
             }
         )
 

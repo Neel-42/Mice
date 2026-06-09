@@ -563,5 +563,36 @@
       "end_s": 71172.0
     }
   ],
-  "featured": []
+  "featured": [
+    {
+      "id": 1,
+      "start_s": 799.0,
+      "end_s": 845.0,
+      "label": "Predicted seizure #1"
+    },
+    {
+      "id": 2,
+      "start_s": 1236.0,
+      "end_s": 1285.0,
+      "label": "Predicted seizure #2"
+    },
+    {
+      "id": 3,
+      "start_s": 1291.0,
+      "end_s": 1342.0,
+      "label": "Predicted seizure #3"
+    },
+    {
+      "id": 4,
+      "start_s": 1730.0,
+      "end_s": 1777.0,
+      "label": "Predicted seizure #4"
+    },
+    {
+      "id": 5,
+      "start_s": 3222.0,
+      "end_s": 3271.0,
+      "label": "Predicted seizure #5"
+    }
+  ]
 }
